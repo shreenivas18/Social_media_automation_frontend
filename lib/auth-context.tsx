@@ -56,18 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    console.log('Attempting to sign out...')
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error('Error signing out:', error.message)
+        console.error('Error signing out from Supabase:', error.message)
+        alert(`Sign out failed: ${error.message}`)
       } else {
+        console.log('Successfully signed out from Supabase. Clearing user state.')
         setUser(null)
         setUserProfile(null)
         router.push('/')
         router.refresh()
+        console.log('Redirected to home and refreshed.')
       }
     } catch (error) {
-      console.error('Error during sign out:', error)
+      console.error('An unexpected error occurred during sign out:', error)
+      alert(`An unexpected error occurred: ${error}`)
     }
   }
 
