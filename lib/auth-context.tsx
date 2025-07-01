@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null)
         setUserProfile(null)
         router.push('/')
+        router.refresh()
       }
     } catch (error) {
       console.error('Error during sign out:', error)
