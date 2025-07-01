@@ -1,8 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import GeneratorCard from "@/components/Dashboard/generator-card";
+import { useAuth } from "@/lib/auth-context";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 
 export default function DashboardPage() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/auth');
+    }
+  }, [isLoading, user, router]);
+
   const generators = [
     {
       tag: "Content",
@@ -29,6 +43,14 @@ export default function DashboardPage() {
       hoverTheme: 'video' as const,
     },
   ];
+
+  if (isLoading || !user) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <p>Loading...</p>
+        </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center w-full gap-12">
