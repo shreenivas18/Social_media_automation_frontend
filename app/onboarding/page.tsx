@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, testDatabaseConnection } from '@/lib/supabase'
+import { startProfileScrape } from '@/lib/scraper'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,33 +14,33 @@ import { Loader2, CheckCircle } from 'lucide-react'
 const questions = [
   {
     id: 1,
-    question: "What's your primary social media platform?",
-    type: "select",
-    options: ["LinkedIn", "Twitter/X", "Instagram", "Facebook", "YouTube", "TikTok", "Other"]
+    question: "What is your product/service?",
+    type: "textarea",
+    placeholder: "e.g., A project management SaaS for small businesses"
   },
   {
     id: 2,
-    question: "What type of content do you create?",
-    type: "select",
-    options: ["Business/Professional", "Personal Brand", "Educational", "Entertainment", "News/Media", "Other"]
+    question: "Who are your ideal customers?",
+    type: "textarea",
+    placeholder: "e.g., Freelancers, startups, and agencies"
   },
   {
     id: 3,
-    question: "How often do you post content?",
-    type: "select",
-    options: ["Daily", "2-3 times per week", "Weekly", "Monthly", "Occasionally"]
+    question: "What is the topic?",
+    type: "textarea",
+    placeholder: "e.g., The future of AI in marketing"
   },
   {
     id: 4,
-    question: "What's your main goal with social media?",
-    type: "textarea",
-    placeholder: "e.g., Build my personal brand, generate leads, share knowledge..."
+    question: "What's your unique style?",
+    type: "select",
+    options: ["Professional", "Casual", "Witty", "Inspirational", "Technical"]
   },
   {
     id: 5,
-    question: "What's your biggest challenge with content creation?",
-    type: "textarea",
-    placeholder: "e.g., Finding time to create content, coming up with ideas, maintaining consistency..."
+    question: "Where do you want to post?",
+    type: "select",
+    options: ["LinkedIn", "Twitter/X", "Blog", "All of the above"]
   }
 ]
 
@@ -194,9 +195,16 @@ export default function OnboardingPage() {
       }
 
       console.log('Onboarding saved successfully!')
+
+      // Kick off automatic profile scrape (does not block the user)
+      try {
+        await startProfileScrape();
+        console.log('Profile scrape started successfully.');
+      } catch (scrapeError) {
+        console.error('Failed to start profile scrape:', scrapeError);
+        // We don't block the user for this, just log the error.
+      }
       setIsCompleted(true)
-      
-      // Remove the timeout and redirect immediately
       router.push('/dashboard')
     } catch (error) {
       console.error('Onboarding submit error:', error)
