@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
 import { Eye, EyeOff, Loader2, CheckCircle, Mail, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -276,7 +277,12 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 to-background p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md relative">
+        <Link href="/" passHref>
+          <Button variant="ghost" className="absolute top-4 left-4 h-8 w-8 p-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Welcome</CardTitle>
           <CardDescription className="text-center">

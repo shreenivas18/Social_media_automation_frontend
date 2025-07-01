@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null)
         setUserProfile(null)
-        router.push('/auth')
+        router.push('/')
       }
     } catch (error) {
       console.error('Error during sign out:', error)
