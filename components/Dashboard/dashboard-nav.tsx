@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -14,9 +15,16 @@ const navItems = [
 
 export default function DashboardNav() {
   const pathname = usePathname();
+  const { signOut } = useAuth();
 
   return (
     <nav className="flex items-center space-x-2 md:space-x-4 text-sm font-medium">
+      <button
+        onClick={signOut}
+        className="transition-colors hover:text-white px-3 py-2 rounded-md text-zinc-400"
+      >
+        Logout
+      </button>
       {navItems.map((item) => (
         <Link
           key={item.name}
