@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, testDatabaseConnection } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { startProfileScrape } from '@/lib/scraper'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -52,39 +52,24 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  // Test database connection on component mount
   useEffect(() => {
-    const testConnection = async () => {
-      try {
-        console.log('Testing Supabase connection...')
-        const result = await testDatabaseConnection()
-        console.log('Database connection test result:', result)
+    const checkOnboardingStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: onboarding } = await supabase
+          .from('onboarding')
+          .select('completed')
+          .eq('user_id', user.id)
+          .single();
         
-        // Check if user has already completed onboarding
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          try {
-            const { data: onboarding } = await supabase
-              .from('onboarding')
-              .select('completed')
-              .eq('user_id', user.id)
-              .single()
-            
-            if (onboarding?.completed) {
-              console.log('User has already completed onboarding, redirecting to dashboard')
-              router.push('/dashboard')
-            }
-          } catch (error) {
-            console.log('No onboarding data found, user needs to complete onboarding')
-          }
+        if (onboarding?.completed) {
+          router.push('/dashboard');
         }
-      } catch (err) {
-        console.error('Database connection test error:', err)
       }
-    }
+    };
     
-    testConnection()
-  }, [router])
+    checkOnboardingStatus();
+  }, [router]);
 
   const handleAnswer = (questionId: number, answer: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }))
@@ -105,38 +90,17 @@ export default function OnboardingPage() {
   }
 
   const handleSubmit = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      console.log('Starting onboarding submission...')
-      
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError) {
-        console.error('User error:', userError)
-        setError('Authentication error: ' + userError.message)
-        setIsLoading(false)
-        return
-      }
-      
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('No user found')
-        setError('User not found. Please sign in again.')
-        setIsLoading(false)
-        return
+        throw new Error('User not found. Please sign in again.');
       }
 
-      console.log('User ID:', user.id)
-      console.log('Answers:', answers)
-
-      // Check if all questions are answered
-      const unansweredQuestions = questions.filter(q => !answers[q.id])
-      if (unansweredQuestions.length > 0) {
-        console.error('Unanswered questions:', unansweredQuestions)
-        setError('Please answer all questions before proceeding.')
-        setIsLoading(false)
-        return
+      if (questions.some(q => !answers[q.id])) {
+        throw new Error('Please answer all questions before proceeding.');
       }
 
       const onboardingData = {
@@ -146,72 +110,34 @@ export default function OnboardingPage() {
         question3: answers[3] || '',
         question4: answers[4] || '',
         question5: answers[5] || '',
-        completed: true
-      }
+        completed: true,
+      };
 
-      console.log('Saving onboarding data:', onboardingData)
-
-      // Try different approaches to save data
-      let saveResult = null
-      let saveError = null
-
-      // Approach 1: Try upsert
-      try {
-        const { data, error } = await supabase
-          .from('onboarding')
-          .upsert(onboardingData, { onConflict: 'user_id' })
-        
-        saveResult = data
-        saveError = error
-        console.log('Upsert result:', { data, error })
-      } catch (err) {
-        console.error('Upsert failed:', err)
-        saveError = err
-      }
-
-      // Approach 2: If upsert fails, try insert
-      if (saveError) {
-        try {
-          console.log('Trying insert instead...')
-          const { data, error } = await supabase
-            .from('onboarding')
-            .insert(onboardingData)
-          
-          saveResult = data
-          saveError = error
-          console.log('Insert result:', { data, error })
-        } catch (err) {
-          console.error('Insert failed:', err)
-          saveError = err
-        }
-      }
+      const { error: saveError } = await supabase
+        .from('onboarding')
+        .upsert(onboardingData, { onConflict: 'user_id' });
 
       if (saveError) {
-        console.error('All save attempts failed:', saveError)
-        const errorMessage = saveError instanceof Error ? saveError.message : String(saveError)
-        setError('Failed to save onboarding data: ' + errorMessage)
-        setIsLoading(false)
-        return
+        throw saveError;
       }
-
-      console.log('Onboarding saved successfully!')
 
       // Kick off automatic profile scrape (does not block the user)
       try {
         await startProfileScrape();
-        console.log('Profile scrape started successfully.');
       } catch (scrapeError) {
+        // We don't block the user for this, just log the error for debugging.
         console.error('Failed to start profile scrape:', scrapeError);
-        // We don't block the user for this, just log the error.
       }
-      setIsCompleted(true)
-      router.push('/dashboard')
+
+      setIsCompleted(true);
+      // Redirect after a short delay to show completion message
+      setTimeout(() => router.push('/dashboard'), 2000);
     } catch (error) {
-      console.error('Onboarding submit error:', error)
-      setError('An unexpected error occurred: ' + (error instanceof Error ? error.message : 'Unknown error'))
-      setIsLoading(false)
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+      setError(errorMessage);
+      setIsLoading(false);
     }
-  }
+  };
 
   const currentQ = questions[currentQuestion]
   const progress = ((currentQuestion + 1) / questions.length) * 100
@@ -309,17 +235,7 @@ export default function OnboardingPage() {
                   'Next'
                 )}
               </Button>
-              {currentQuestion === questions.length - 1 && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    console.log('Current answers:', answers)
-                    console.log('All questions answered:', questions.every(q => answers[q.id]))
-                  }}
-                >
-                  Debug
-                </Button>
-              )}
+
             </div>
           </div>
         </CardContent>

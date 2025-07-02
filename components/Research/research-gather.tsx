@@ -9,14 +9,13 @@ import { startTopicScrape } from '@/lib/scraper'
 
 interface ResearchGatherProps {
   className?: string
-  onStarted?: (topic: string) => void
 }
 
 /**
  * Generic input + button to trigger the /scraper/topic endpoint.
  * Drop <ResearchGather/> anywhere a user can type a topic to gather research.
  */
-export default function ResearchGather({ className, onStarted }: ResearchGatherProps) {
+export default function ResearchGather({ className }: ResearchGatherProps) {
   const [topic, setTopic] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +30,6 @@ export default function ResearchGather({ className, onStarted }: ResearchGatherP
     try {
       await startTopicScrape(topic.trim())
       setSuccess(true)
-      onStarted?.(topic.trim())
     } catch (err) {
       console.error('Gather research failed', err)
       setError('Failed to start research. Please try again.')
@@ -39,6 +37,7 @@ export default function ResearchGather({ className, onStarted }: ResearchGatherP
       setIsLoading(false)
     }
   }
+
 
   return (
     <div className={className}>

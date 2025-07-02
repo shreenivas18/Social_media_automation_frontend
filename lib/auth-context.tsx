@@ -39,13 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   const getProfile = async (userId: string) => {
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single()
-    
-    setUserProfile(profile)
+      .maybeSingle()
+
+    // Silently ignore missing profile rows or RLS errors
+    setUserProfile(profile ?? null)
     return profile
   }
 

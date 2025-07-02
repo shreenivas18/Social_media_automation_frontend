@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import ResearchGather from '@/components/Research/research-gather'
-import { getTopicResults } from '@/lib/scraper'
+
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
@@ -44,32 +44,10 @@ export default function BlogGeneratorPage() {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null)
   const [editorMode, setEditorMode] = useState("edit") // 'edit' or 'preview'
   const [mobilePreview, setMobilePreview] = useState(false)
-  const [researchTopic, setResearchTopic] = useState<string | null>(null)
-  const [researchData, setResearchData] = useState<{ topic: string; content: string }[] | null>(null);
 
-  useEffect(() => {
-    if (!researchTopic) return;
 
-    setResearchData(null); // Clear old data while new research is in progress
-    const intervalId = setInterval(async () => {
-      try {
-        const results = await getTopicResults(researchTopic);
-        if (results && results.length > 0) {
-          setResearchData(results);
-          setResearchTopic(null); // Stop polling
-          clearInterval(intervalId);
-        }
-      } catch (error) {
-        console.error('Failed to fetch research results', error);
-        // In a real app, you might want to set an error state here
-        // and stop polling after a few failed attempts.
-      }
-    }, 5000); // Poll every 5 seconds
 
-    return () => {
-      clearInterval(intervalId); // Cleanup on unmount or when topic changes
-    };
-  }, [researchTopic]);
+
 
   const blogPosts: BlogPost[] = [
     { id: 1, title: "Getting Started with AI Content", status: "published", views: 1250, date: "2024-01-15" },
@@ -88,25 +66,9 @@ export default function BlogGeneratorPage() {
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Research input */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <ResearchGather onStarted={setResearchTopic} />
+        <ResearchGather />
 
-        {researchData && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Research Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {researchData.map((result, index) => (
-                  <div key={index}>
-                    <h3 className="font-semibold">{result.topic}</h3>
-                    <p className="text-gray-400">{result.content}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+
       </div>
       {/* Header */}
       <div className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">

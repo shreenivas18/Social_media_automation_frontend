@@ -34,10 +34,32 @@ export function startProfileScrape() {
   return postWithJWT('/scraper/profile')
 }
 
-export function startTopicScrape(topic: string) {
-  return postWithJWT('/scraper/topic', { topic })
-}
+export async function startTopicScrape(topic: string) {
+  const body = { topic, max_pages: 5 }
+  console.log('Invoking /scraper/topic', body)
 
-export function getTopicResults(topic: string) {
-  return postWithJWT<{ topic: string, content: string }[]>('/scraper/topic-results', { topic })
+  // Try to obtain a Supabase session for an auth token (optional)
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`
+  }
+
+  // Fire the POST request
+  const res = await fetch(`${SCRAPER_API}/scraper/topic`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  })
+
+  console.log('Scraper response status', res.status)
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Scraper request failed: ${res.status} ${text}`)
+  }
+  return res.json()
 }

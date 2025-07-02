@@ -23,7 +23,7 @@ export default function DashboardNav() {
     if (error) {
       console.error("Error logging out:", error);
     } else {
-      router.push("/login");
+      router.push("/auth");
     }
   };
 
