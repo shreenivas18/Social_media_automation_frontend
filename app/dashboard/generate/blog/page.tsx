@@ -86,10 +86,24 @@ export default function BlogGeneratorPage() {
                 <Settings className="w-4 h-4 mr-2" />
                 Edit Subdomain
               </Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Visit Live Site
-              </Button>
+              {selectedPost ? (
+                <a
+                  href={`/public/${selectedPost.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Visit Live Site
+                  </Button>
+                </a>
+              ) : (
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700" disabled>
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Visit Live Site
+                </Button>
+              )}
             </div>
           </div>
         </div>
